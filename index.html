@@ -93,14 +93,17 @@
 
 <script src="//email.routee.net/apps/fc3/build/loader.js" async sp-form-id="1eae1461df60c7f6923719ef1b383663d60f997a5f712d7cf25e99aa9b631d7b"></script>
          <!-- SendPulse Simple Subscription Form -->
-<form action="https://login.sendpulse.com/forms/simple/u/eyJ1c2VyX2lkIjo3MDQ2NDYwLCJhZGRyZXNzX2Jvb2tfaWQiOjEzMTg0OTYsImxhbmciOiJydSJ9" method="post">
-    <label>Имя</label>
-    <input type="text" name="name">
-    <label>Email</label>
-    <input type="email" required name="email">
-    <input type="hidden" name="sender" value="aflow9@e.cn.ua">
-    <button>Subscribe</button>
-</form>
+ <form action="https://login.sendpulse.com/forms/simple/u/eyJ1c2VyX2lkIjo3MDkxMDgzLCJhZGRyZXNzX2Jvb2tfaWQiOjEzMjI5NDUsImxhbmciOiJydSJ9" method="post" data-form-                       subscribe="">
+            
+          <p>Подпишитесь на наши новости
+            чтобы узнавать о новинках и акциях: </p>
+          <label>Email</label>
+          <input type="email" class="input" placeholder="Ваш Email" required="" name="email">
+          <input type="hidden" class="input" required="" name="subject" value="Запрос на подписку">
+          <input type="hidden" name="sender" value="info@ramonsoler.ru">
+          <button class="btn" type="submit">Подписаться</button>
+          <div class="msg none">Ваш запрос успешно отправлен. Спасибо!</div>
+          </form>
 <!-- SendPulse Simple Subscription Form -->
         
          <!--center>
