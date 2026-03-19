@@ -39,6 +39,11 @@
       <p>
          <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>
 
+      <!-- Hidden identity form — submitted once when user leaves email field -->
+      <form id="spIdentityForm" style="display:none">
+        <input type="email" name="email" id="spIdentityEmail">
+      </form>
+
       <!-- SendPulse Pixel Event fields and button -->
       <p align="center">
         <input type="text" id="eventName" placeholder="name"><br><br>
@@ -54,6 +59,7 @@
         var EVENT_ID = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
         window._spPixelRulesLoaded = false;
+        window._spIdentityRegistered = false;
 
         fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
           .then(function(r) { return r.json(); })
@@ -70,32 +76,30 @@
           }
         }
 
-        function identifyAndFire(name, age, date, email) {
-          // Write identity directly to localStorage — avoids a duplicate capture
-          // request that the hidden form submit approach caused
-          var encoded = 'USPPIN' + btoa(unescape(encodeURIComponent('1;' + email)));
-          var existing = null;
-          try { existing = JSON.parse(localStorage.getItem('sp_pixel_client')); } catch(e) {}
-          if (!existing || existing.payload !== encoded) {
-            localStorage.setItem('sp_pixel_client', JSON.stringify({
-              payload: encoded,
-              uid: existing && existing.uid ? existing.uid : 'uid-' + Date.now()
-            }));
-          }
-
-          window.SP_PIN.fireEvent(
-            EVENT_ID,
-            {
-              name: name,
-              age: age,
-              date: date,
-              email: email
-            }
+        // Submit identity form once — when user leaves the email field
+        // This gives the pixel time to process identity BEFORE the button is clicked,
+        // so handleAllEvents() fires with no pending events and causes no duplicate
+        function registerIdentity(email) {
+          if (window._spIdentityRegistered) return;
+          window._spIdentityRegistered = true;
+          document.getElementById('spIdentityEmail').value = email;
+          document.getElementById('spIdentityForm').dispatchEvent(
+            new Event('submit', { bubbles: true })
           );
-          console.log('fireEvent called with:', name, age, date, email);
+          console.log('Identity registered for:', email);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+          // Register identity as soon as user leaves the email field
+          document.getElementById('eventEmail').addEventListener('blur', function() {
+            var email = this.value.trim();
+            if (email) {
+              waitForPixelReady(function() {
+                registerIdentity(email);
+              });
+            }
+          });
+
           document.getElementById('testEventBtn').addEventListener('click', function() {
             var name  = document.getElementById('eventName').value.trim();
             var age   = parseInt(document.getElementById('eventAge').value.trim(), 10);
@@ -107,9 +111,19 @@
             if (isNaN(age)) { alert('Age must be a number.'); return; }
             if (!date)  { alert('Date is required.'); return; }
 
-            waitForPixelReady(function() {
-              identifyAndFire(name, age, date, email);
-            });
+            // Ensure identity is registered, then wait 1s before firing
+            // so handleAllEvents() has time to complete with no pending events
+            registerIdentity(email);
+            var delay = window._spIdentityRegistered ? 1000 : 0;
+            setTimeout(function() {
+              waitForPixelReady(function() {
+                window.SP_PIN.fireEvent(
+                  EVENT_ID,
+                  { name: name, age: age, date: date, email: email }
+                );
+                console.log('fireEvent called with:', name, age, date, email);
+              });
+            }, delay);
           });
         });
       </script>
