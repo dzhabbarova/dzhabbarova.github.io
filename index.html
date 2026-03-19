@@ -25,55 +25,59 @@
      <script charset="UTF-8" src="//pre.sendpulse.com/js/push/391f727356802c2864c0011b5d03b6ab_1.js" async></script>
    </head>
    <body>
-      <!--button sp-show-form="118447">Показать форму</button-->
-      <!--button sp-show-form="111310">Показать форму</button-->
       <p align="center">
          <input class="sp_push_custom_data" type="text" name="name" placeholder="name">
          <input class="sp_push_custom_data" type="text" name="email" placeholder="email">
          <input class="sp_push_custom_data" type="phone" name="phone" placeholder="phone">
-         <input type=submit value="Subscribe"  class="sp_notify_prompt">
+         <input type=submit value="Subscribe" class="sp_notify_prompt">
       </p>
 
 <script src="//web.webformscr.com/apps/fc3/build/loader.js" async sp-form-id="7a741cc985e2b93111c89f1d3b895666f9c6066b522f5343f41468ac47c9009c"></script>
-<!--script src="//pre.sendpulse.com/apps/fc3/build/loader.js" async sp-form-id="1803fdb9e4bbfaac48307489a16bd124eaac526a9f6ebd36ea538db8d14f32cb"></script-->
       <a href="bars.html">Снежный барс</a> </br>
       <a href="owl.html">Полярная сова</a>
       <p><a href="/User - мужская домашняя одежда (брюки и бриджи).xlsx" download>Скачать файл</a>
-      <p><a href="/Название - файла (с пробелом).xlsx" download>Скачать файл - Название - файла (с пробелом).xlsx xlxs</a>	
+      <p><a href="/Название - файла (с пробелом).xlsx" download>Скачать файл - Название - файла (с пробелом).xlsx xlxs</a>
       <p>
-         <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>	
+         <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>
 
       <!-- SendPulse Pixel Event Test Button -->
       <p align="center">
         <button id="testEventBtn">Test SendPulse Event</button>
       </p>
 
-         <!--p>pre form, radio buttons</p-->
-         <!--script src="//email.routee.net/apps/fc3/build/loader.js" async sp-form-id="1eae1461df60c7f6923719ef1b383663d60f997a5f712d7cf25e99aa9b631d7b"></script-->
-         <!--center>
-            <table class="border" width="320" border="0">
-              <tbody>
-                <tr>
-                  <td colspan="2">
-                    <div class="optinhead"><span
-                        style="background-color:yellow;">FREE 7 Day Video
-                        Series<br>
-                      </span></div>
-                    <div class="optintext">"How To Generate All The Money You
-                      Need Online To Live Your Dream Life Even If You've Never
-                      Made A Single Sale Online Before Without Being A GURU
-                      First..."<br>
-                      <img src="img/arrowdown09.png" style="margin-top:15px;"></div>
-            
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-         <br>
-         </center-->
          <script src="https://spxl.sppopups.com/pulsepix.js" data-project-id="a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc"></script>
 
       <script>
+        var EVENT_ID = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
+        var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
+        window._spPixelRulesLoaded = false;
+
+        // Mirror the gpi-data fetch so we know when the pixel's rules are ready
+        fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            console.log('gpi-data loaded, events found:', data.data.events.length);
+            window._spPixelRulesLoaded = true;
+          })
+          .catch(function(e) {
+            console.error('gpi-data fetch failed:', e);
+            window._spPixelRulesLoaded = true;
+          });
+
+        function waitForPixelReady(callback, retries) {
+          retries = retries || 0;
+          if (retries > 50) {
+            console.error('SendPulse pixel did not become ready after 10s.');
+            return;
+          }
+          if (typeof window.SP_PIN !== 'undefined' && window._spPixelRulesLoaded) {
+            callback();
+          } else {
+            console.log('Waiting for pixel... SP_PIN:', typeof window.SP_PIN, '| rules:', window._spPixelRulesLoaded);
+            setTimeout(function() { waitForPixelReady(callback, retries + 1); }, 200);
+          }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
           console.log('DOM ready — attaching SendPulse event listener');
 
@@ -86,27 +90,19 @@
               return;
             }
 
-            console.log('Email value:', email);
-            console.log('SP_PIN status:', typeof window.SP_PIN);
-
-            if (typeof window.SP_PIN === 'undefined') {
-              console.warn('SP_PIN not ready — retrying in 300ms');
-              setTimeout(function() {
-                document.getElementById('testEventBtn').click();
-              }, 300);
-              return;
-            }
-
-            window.SP_PIN.fireEvent(
-              '4cf18c54-aa0a-465a-b8c0-092ac00e45b8',
-              {
-                name: 'Test User',
-                age: 25,
-                date: '2026-03-19',
-                email: email
-              }
-            );
-            console.log('SendPulse pixel event fired with email:', email);
+            waitForPixelReady(function() {
+              console.log('Pixel ready — firing event with email:', email);
+              window.SP_PIN.fireEvent(
+                EVENT_ID,
+                {
+                  name: 'Test User',
+                  age: 25,
+                  date: '2026-03-19',
+                  email: email
+                }
+              );
+              console.log('fireEvent called!');
+            });
           });
         });
       </script>
