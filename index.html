@@ -42,6 +42,12 @@
       <p><a href="/Название - файла (с пробелом).xlsx" download>Скачать файл - Название - файла (с пробелом).xlsx xlxs</a>	
       <p>
          <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>	
+
+      <!-- SendPulse Pixel Event Test Button -->
+      <p align="center">
+        <button id="testEventBtn">Test SendPulse Event</button>
+      </p>
+
          <!--p>pre form, radio buttons</p-->
          <!--script src="//email.routee.net/apps/fc3/build/loader.js" async sp-form-id="1eae1461df60c7f6923719ef1b383663d60f997a5f712d7cf25e99aa9b631d7b"></script-->
          <!--center>
@@ -65,7 +71,28 @@
             </table>
          <br>
          </center-->
-         <script async src="https://spxl.sppopups.com/pulsepix.js" data-project-id="a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc"></script>	
+         <script async src="https://spxl.sppopups.com/pulsepix.js" data-project-id="a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc"></script>
+
+      <script>
+        function fireTestEvent() {
+          if (typeof window.SP_PIN === 'undefined') {
+            // Pixel not ready yet — retry after 300ms
+            setTimeout(fireTestEvent, 300);
+            return;
+          }
+          window.SP_PIN.fireEvent(
+            '4cf18c54-aa0a-465a-b8c0-092ac00e45b8',
+            {
+              name: 'Test User',  // String — replace later with real value
+              age: 25,            // Number — replace later with real value
+              date: '2026-03-19'  // String — replace later with real value
+            }
+          );
+          console.log('SendPulse pixel event fired!');
+        }
+
+        document.getElementById('testEventBtn').addEventListener('click', fireTestEvent);
+      </script>
+
      </body>
 </html>
-
