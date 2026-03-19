@@ -10,7 +10,7 @@
 
   gtag('config', 'UA-146340221-1');
 </script>
-      
+
 <meta charset="UTF-8">
       <title>lemme test it</title>
       <style>
@@ -39,11 +39,6 @@
       <p>
          <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>
 
-      <!-- Hidden identity form -->
-      <form id="spIdentityForm" style="display:none">
-        <input type="email" name="email" id="spIdentityEmail">
-      </form>
-
       <!-- SendPulse Pixel Event fields and button -->
       <p align="center">
         <input type="text" id="eventName" placeholder="name"><br><br>
@@ -57,7 +52,27 @@
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
         var EVENT_ID   = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
 
-        // Dynamically inject pulsepix.js with data-project-id set from PROJECT_ID
+        // Read ?pin= from URL and store as sp_pixel_client identity
+        // The pixel's loadFromUrl() only reads ?sp_pin= natively,
+        // so we handle ?pin= ourselves using the same payload format
+        (function() {
+          var pin = new URLSearchParams(window.location.search).get('pin');
+          if (pin) {
+            var existing = null;
+            try { existing = JSON.parse(localStorage.getItem('sp_pixel_client')); } catch(e) {}
+            if (!existing || existing.payload !== pin) {
+              localStorage.setItem('sp_pixel_client', JSON.stringify({
+                payload: pin,
+                uid: existing && existing.uid ? existing.uid : 'uid-' + Date.now()
+              }));
+              console.log('Identity set from ?pin= URL parameter');
+            }
+          } else {
+            console.warn('No ?pin= found in URL — pixel event will not send without identity.');
+          }
+        })();
+
+        // Dynamically inject pulsepix.js
         (function() {
           var s = document.createElement('script');
           s.src = 'https://spxl.sppopups.com/pulsepix.js';
@@ -66,7 +81,6 @@
         })();
 
         window._spPixelRulesLoaded = false;
-        window._spIdentitySettled  = false;
 
         fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
           .then(function(r) { return r.json(); })
@@ -83,41 +97,7 @@
           }
         }
 
-        function waitForIdentitySettled(callback, retries) {
-          retries = retries || 0;
-          if (retries > 50) { console.error('Identity never settled.'); return; }
-          if (window._spIdentitySettled) {
-            callback();
-          } else {
-            setTimeout(function() { waitForIdentitySettled(callback, retries + 1); }, 200);
-          }
-        }
-
-        function registerIdentity(email) {
-          document.getElementById('spIdentityEmail').value = email;
-          document.getElementById('spIdentityForm').dispatchEvent(
-            new Event('submit', { bubbles: true })
-          );
-          console.log('Identity submitted for:', email);
-          setTimeout(function() {
-            window._spIdentitySettled = true;
-            console.log('Identity settled — button ready to fire.');
-          }, 1500);
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-          var identityRegistered = false;
-
-          document.getElementById('eventEmail').addEventListener('blur', function() {
-            if (identityRegistered) return;
-            var email = this.value.trim();
-            if (!email) return;
-            identityRegistered = true;
-            waitForPixelReady(function() {
-              registerIdentity(email);
-            });
-          });
-
           document.getElementById('testEventBtn').addEventListener('click', function() {
             var btn   = this;
             var name  = document.getElementById('eventName').value.trim();
@@ -125,22 +105,15 @@
             var date  = document.getElementById('eventDate').value.trim();
             var email = document.getElementById('eventEmail').value.trim();
 
-            if (!email) { alert('Email is required.'); return; }
-            if (!name)  { alert('Name is required.'); return; }
-            if (isNaN(age)) { alert('Age must be a number.'); return; }
-            if (!date)  { alert('Date is required.'); return; }
+            if (!name)       { alert('Name is required.'); return; }
+            if (isNaN(age))  { alert('Age must be a number.'); return; }
+            if (!date)       { alert('Date is required.'); return; }
+            if (!email)      { alert('Email is required.'); return; }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
-            if (!identityRegistered) {
-              identityRegistered = true;
-              waitForPixelReady(function() {
-                registerIdentity(email);
-              });
-            }
-
-            waitForIdentitySettled(function() {
+            waitForPixelReady(function() {
               window.SP_PIN.fireEvent(
                 EVENT_ID,
                 { name: name, age: age, date: date, email: email }
