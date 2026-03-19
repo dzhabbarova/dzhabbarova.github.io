@@ -53,13 +53,20 @@
         <button id="testEventBtn">Test SendPulse Event</button>
       </p>
 
-         <script src="https://spxl.sppopups.com/pulsepix.js" data-project-id="a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc"></script>
-
       <script>
-        var EVENT_ID = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
+        var EVENT_ID   = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
+
+        // Dynamically inject pulsepix.js with data-project-id set from PROJECT_ID
+        (function() {
+          var s = document.createElement('script');
+          s.src = 'https://spxl.sppopups.com/pulsepix.js';
+          s.dataset.projectId = PROJECT_ID;
+          document.currentScript.parentNode.insertBefore(s, document.currentScript.nextSibling);
+        })();
+
         window._spPixelRulesLoaded = false;
-        window._spIdentitySettled = false; // true after identity + handleAllEvents() have completed
+        window._spIdentitySettled  = false;
 
         fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
           .then(function(r) { return r.json(); })
@@ -86,10 +93,6 @@
           }
         }
 
-        // Called once when user leaves the email field.
-        // Submits hidden form → pixel registers identity → handleAllEvents() fires
-        // with only page-view auto-events (not our manual event).
-        // After 1500ms we mark identity as settled so the button can proceed safely.
         function registerIdentity(email) {
           document.getElementById('spIdentityEmail').value = email;
           document.getElementById('spIdentityForm').dispatchEvent(
@@ -105,7 +108,6 @@
         document.addEventListener('DOMContentLoaded', function() {
           var identityRegistered = false;
 
-          // Register identity exactly once when user leaves the email field
           document.getElementById('eventEmail').addEventListener('blur', function() {
             if (identityRegistered) return;
             var email = this.value.trim();
@@ -128,11 +130,9 @@
             if (isNaN(age)) { alert('Age must be a number.'); return; }
             if (!date)  { alert('Date is required.'); return; }
 
-            // Disable button to prevent double-click
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
-            // If user skipped tabbing out of email field, register identity now
             if (!identityRegistered) {
               identityRegistered = true;
               waitForPixelReady(function() {
@@ -140,7 +140,6 @@
               });
             }
 
-            // Wait until identity + handleAllEvents() have fully completed
             waitForIdentitySettled(function() {
               window.SP_PIN.fireEvent(
                 EVENT_ID,
