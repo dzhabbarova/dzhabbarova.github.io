@@ -44,7 +44,6 @@
         <input type="text" id="eventName" placeholder="name"><br><br>
         <input type="number" id="eventAge" placeholder="age"><br><br>
         <input type="text" id="eventDate" placeholder="date (e.g. 2026-03-19)"><br><br>
-        <input type="email" id="eventEmail" placeholder="email"><br><br>
         <button id="testEventBtn">Test SendPulse Event</button>
       </p>
 
@@ -52,27 +51,7 @@
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
         var EVENT_ID   = '4cf18c54-aa0a-465a-b8c0-092ac00e45b8';
 
-        // Read ?pin= from URL and store as sp_pixel_client identity
-        // The pixel's loadFromUrl() only reads ?sp_pin= natively,
-        // so we handle ?pin= ourselves using the same payload format
-        (function() {
-          var pin = new URLSearchParams(window.location.search).get('pin');
-          if (pin) {
-            var existing = null;
-            try { existing = JSON.parse(localStorage.getItem('sp_pixel_client')); } catch(e) {}
-            if (!existing || existing.payload !== pin) {
-              localStorage.setItem('sp_pixel_client', JSON.stringify({
-                payload: pin,
-                uid: existing && existing.uid ? existing.uid : 'uid-' + Date.now()
-              }));
-              console.log('Identity set from ?pin= URL parameter');
-            }
-          } else {
-            console.warn('No ?pin= found in URL — pixel event will not send without identity.');
-          }
-        })();
-
-        // Dynamically inject pulsepix.js
+        // Dynamically inject pulsepix.js — pixel reads ?sp_pin= from URL automatically
         (function() {
           var s = document.createElement('script');
           s.src = 'https://spxl.sppopups.com/pulsepix.js';
@@ -99,16 +78,14 @@
 
         document.addEventListener('DOMContentLoaded', function() {
           document.getElementById('testEventBtn').addEventListener('click', function() {
-            var btn   = this;
-            var name  = document.getElementById('eventName').value.trim();
-            var age   = parseInt(document.getElementById('eventAge').value.trim(), 10);
-            var date  = document.getElementById('eventDate').value.trim();
-            var email = document.getElementById('eventEmail').value.trim();
+            var btn  = this;
+            var name = document.getElementById('eventName').value.trim();
+            var age  = parseInt(document.getElementById('eventAge').value.trim(), 10);
+            var date = document.getElementById('eventDate').value.trim();
 
-            if (!name)       { alert('Name is required.'); return; }
-            if (isNaN(age))  { alert('Age must be a number.'); return; }
-            if (!date)       { alert('Date is required.'); return; }
-            if (!email)      { alert('Email is required.'); return; }
+            if (!name)      { alert('Name is required.'); return; }
+            if (isNaN(age)) { alert('Age must be a number.'); return; }
+            if (!date)      { alert('Date is required.'); return; }
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
@@ -116,9 +93,9 @@
             waitForPixelReady(function() {
               window.SP_PIN.fireEvent(
                 EVENT_ID,
-                { name: name, age: age, date: date, email: email }
+                { name: name, age: age, date: date }
               );
-              console.log('fireEvent called with:', name, age, date, email);
+              console.log('fireEvent called with:', name, age, date);
               btn.textContent = 'Sent!';
             });
           });
