@@ -75,6 +75,11 @@
 
       <script>
         function fireTestEvent() {
+          var email = document.querySelector('input[name="email"]').value.trim();
+          if (!email) {
+            alert('Please enter an email address first.');
+            return;
+          }
           if (typeof window.SP_PIN === 'undefined') {
             // Pixel not ready yet — retry after 300ms
             setTimeout(fireTestEvent, 300);
@@ -85,10 +90,11 @@
             {
               name: 'Test User',  // String — replace later with real value
               age: 25,            // Number — replace later with real value
-              date: '2026-03-19'  // String — replace later with real value
+              date: '2026-03-19', // String — replace later with real value
+              email: email        // Read from the email input field
             }
           );
-          console.log('SendPulse pixel event fired!');
+          console.log('SendPulse pixel event fired with email:', email);
         }
 
         document.getElementById('testEventBtn').addEventListener('click', fireTestEvent);
