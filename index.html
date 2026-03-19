@@ -40,13 +40,17 @@
       <p>
          <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>
 
-      <!-- Hidden identity form — used to register visitor email with the pixel -->
+      <!-- Hidden identity form -->
       <form id="spIdentityForm" style="display:none">
         <input type="email" name="email" id="spIdentityEmail">
       </form>
 
-      <!-- SendPulse Pixel Event Test Button -->
+      <!-- SendPulse Pixel Event fields and button -->
       <p align="center">
+        <input type="text" id="eventName" placeholder="name"><br><br>
+        <input type="number" id="eventAge" placeholder="age"><br><br>
+        <input type="text" id="eventDate" placeholder="date (e.g. 2026-03-19)"><br><br>
+        <input type="email" id="eventEmail" placeholder="email"><br><br>
         <button id="testEventBtn">Test SendPulse Event</button>
       </p>
 
@@ -57,24 +61,18 @@
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
         window._spPixelRulesLoaded = false;
 
-        // Mirror the pixel's own gpi-data fetch so we know when rules are ready
         fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            console.log('gpi-data loaded, events found:', data.data.events.length);
             window._spPixelRulesLoaded = true;
           })
-          .catch(function(e) {
-            console.error('gpi-data fetch failed:', e);
+          .catch(function() {
             window._spPixelRulesLoaded = true;
           });
 
         function waitForPixelReady(callback, retries) {
           retries = retries || 0;
-          if (retries > 50) {
-            console.error('SendPulse pixel did not become ready after 10s.');
-            return;
-          }
+          if (retries > 50) return;
           if (typeof window.SP_PIN !== 'undefined' && window._spPixelRulesLoaded) {
             callback();
           } else {
@@ -82,41 +80,41 @@
           }
         }
 
-        function identifyAndFire(email) {
-          // Step 1: submit the hidden form so the pixel registers visitor identity
+        function identifyAndFire(name, age, date, email) {
           var identityEmail = document.getElementById('spIdentityEmail');
           identityEmail.value = email;
-          var form = document.getElementById('spIdentityForm');
-          form.dispatchEvent(new Event('submit', { bubbles: true }));
+          document.getElementById('spIdentityForm').dispatchEvent(
+            new Event('submit', { bubbles: true })
+          );
 
-          // Step 2: wait 500ms for identity to register, then fire the event
           setTimeout(function() {
-            console.log('Firing pixel event for:', email);
             window.SP_PIN.fireEvent(
               EVENT_ID,
               {
-                name: 'Test User',   // replace with real value when needed
-                age: 25,             // replace with real value when needed
-                date: '2026-03-19',  // replace with real value when needed
+                name: name,
+                age: age,      // Number
+                date: date,
                 email: email
               }
             );
-            console.log('fireEvent called!');
+            console.log('fireEvent called with:', name, age, date, email);
           }, 500);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-          console.log('DOM ready — attaching SendPulse event listener');
-
           document.getElementById('testEventBtn').addEventListener('click', function() {
-            var email = document.querySelector('input[name="email"]').value.trim();
-            if (!email) {
-              alert('Please enter an email address first.');
-              return;
-            }
+            var name  = document.getElementById('eventName').value.trim();
+            var age   = parseInt(document.getElementById('eventAge').value.trim(), 10);
+            var date  = document.getElementById('eventDate').value.trim();
+            var email = document.getElementById('eventEmail').value.trim();
+
+            if (!email) { alert('Email is required.'); return; }
+            if (!name)  { alert('Name is required.'); return; }
+            if (isNaN(age)) { alert('Age must be a number.'); return; }
+            if (!date)  { alert('Date is required.'); return; }
 
             waitForPixelReady(function() {
-              identifyAndFire(email);
+              identifyAndFire(name, age, date, email);
             });
           });
         });
