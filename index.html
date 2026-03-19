@@ -40,6 +40,11 @@
       <p>
          <a href="/Name - файла (с пробелом).xls" download>Скачать файл - Name - файла (с пробелом).xls</a>
 
+      <!-- Hidden identity form — used to register visitor email with the pixel -->
+      <form id="spIdentityForm" style="display:none">
+        <input type="email" name="email" id="spIdentityEmail">
+      </form>
+
       <!-- SendPulse Pixel Event Test Button -->
       <p align="center">
         <button id="testEventBtn">Test SendPulse Event</button>
@@ -52,7 +57,7 @@
         var PROJECT_ID = 'a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc';
         window._spPixelRulesLoaded = false;
 
-        // Mirror the gpi-data fetch so we know when the pixel's rules are ready
+        // Mirror the pixel's own gpi-data fetch so we know when rules are ready
         fetch('https://pixel.sppopups.com/gpi-data/data-' + PROJECT_ID + '.json')
           .then(function(r) { return r.json(); })
           .then(function(data) {
@@ -73,17 +78,37 @@
           if (typeof window.SP_PIN !== 'undefined' && window._spPixelRulesLoaded) {
             callback();
           } else {
-            console.log('Waiting for pixel... SP_PIN:', typeof window.SP_PIN, '| rules:', window._spPixelRulesLoaded);
             setTimeout(function() { waitForPixelReady(callback, retries + 1); }, 200);
           }
+        }
+
+        function identifyAndFire(email) {
+          // Step 1: submit the hidden form so the pixel registers visitor identity
+          var identityEmail = document.getElementById('spIdentityEmail');
+          identityEmail.value = email;
+          var form = document.getElementById('spIdentityForm');
+          form.dispatchEvent(new Event('submit', { bubbles: true }));
+
+          // Step 2: wait 500ms for identity to register, then fire the event
+          setTimeout(function() {
+            console.log('Firing pixel event for:', email);
+            window.SP_PIN.fireEvent(
+              EVENT_ID,
+              {
+                name: 'Test User',   // replace with real value when needed
+                age: 25,             // replace with real value when needed
+                date: '2026-03-19',  // replace with real value when needed
+                email: email
+              }
+            );
+            console.log('fireEvent called!');
+          }, 500);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
           console.log('DOM ready — attaching SendPulse event listener');
 
           document.getElementById('testEventBtn').addEventListener('click', function() {
-            console.log('Button clicked');
-
             var email = document.querySelector('input[name="email"]').value.trim();
             if (!email) {
               alert('Please enter an email address first.');
@@ -91,17 +116,7 @@
             }
 
             waitForPixelReady(function() {
-              console.log('Pixel ready — firing event with email:', email);
-              window.SP_PIN.fireEvent(
-                EVENT_ID,
-                {
-                  name: 'Test User',
-                  age: 25,
-                  date: '2026-03-19',
-                  email: email
-                }
-              );
-              console.log('fireEvent called!');
+              identifyAndFire(email);
             });
           });
         });
