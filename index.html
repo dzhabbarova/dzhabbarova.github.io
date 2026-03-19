@@ -74,30 +74,41 @@
          <script async src="https://spxl.sppopups.com/pulsepix.js" data-project-id="a8ea1a3d-c649-4bc2-94a8-8bc5dd8c77fc"></script>
 
       <script>
-        function fireTestEvent() {
-          var email = document.querySelector('input[name="email"]').value.trim();
-          if (!email) {
-            alert('Please enter an email address first.');
-            return;
-          }
-          if (typeof window.SP_PIN === 'undefined') {
-            // Pixel not ready yet — retry after 300ms
-            setTimeout(fireTestEvent, 300);
-            return;
-          }
-          window.SP_PIN.fireEvent(
-            '4cf18c54-aa0a-465a-b8c0-092ac00e45b8',
-            {
-              name: 'Test User',  // String — replace later with real value
-              age: 25,            // Number — replace later with real value
-              date: '2026-03-19', // String — replace later with real value
-              email: email        // Read from the email input field
-            }
-          );
-          console.log('SendPulse pixel event fired with email:', email);
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('DOM ready — attaching SendPulse event listener');
 
-        document.getElementById('testEventBtn').addEventListener('click', fireTestEvent);
+          document.getElementById('testEventBtn').addEventListener('click', function() {
+            console.log('Button clicked');
+
+            var email = document.querySelector('input[name="email"]').value.trim();
+            if (!email) {
+              alert('Please enter an email address first.');
+              return;
+            }
+
+            console.log('Email value:', email);
+            console.log('SP_PIN status:', typeof window.SP_PIN);
+
+            if (typeof window.SP_PIN === 'undefined') {
+              console.warn('SP_PIN not ready — retrying in 300ms');
+              setTimeout(function() {
+                document.getElementById('testEventBtn').click();
+              }, 300);
+              return;
+            }
+
+            window.SP_PIN.fireEvent(
+              '4cf18c54-aa0a-465a-b8c0-092ac00e45b8',
+              {
+                name: 'Test User',
+                age: 25,
+                date: '2026-03-19',
+                email: email
+              }
+            );
+            console.log('SendPulse pixel event fired with email:', email);
+          });
+        });
       </script>
 
      </body>
